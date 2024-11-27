@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Contract</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="headerabout">
+        <nav>
+            <ul>
+                <li><a href="/">HOME</a></li>
+                <li><a href="/register-vendor.html">REGISTER VENDOR</a></li>
+                <li><a href="/add-contract.html">ADD CONTRACT</a></li>
+                <li><a href="/vendor-directory.html">VENDOR DIRECTORY</a></li>
+                <li><a href="/evaluate-performance.html">EVALUATE PERFORMANCE</a></li>
+            </ul>
+        </nav>
+        <h1>Add New Contract</h1>
+    </header>
+
+    <section class="form-section">
+        <div class="form-container">
+            <h2>Contract Details</h2>
+            <form id="contractForm" action="/add-contract" method="POST">
+                <label for="VendorID">Vendor ID:</label>
+                <input type="number" id="VendorID" name="VendorID" required>
+
+                <label for="DepartmentID">Department ID:</label>
+                <input type="number" id="DepartmentID" name="DepartmentID" required>
+
+                <label for="StartDate">Start Date:</label>
+                <input type="date" id="StartDate" name="StartDate" required>
+
+                <label for="EndDate">End Date:</label>
+                <input type="date" id="EndDate" name="EndDate" required>
+
+                <label for="Status">Status:</label>
+                <select id="Status" name="Status" required>
+                    <option value="Active">Active</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Renewed">Renewed</option>
+                </select>
+
+                <button type="submit" class="submit-btn">Add Contract</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <p>Vendor Management System</p>
+    </footer>
+</body>
+</html>
