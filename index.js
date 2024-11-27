@@ -91,7 +91,7 @@ app.get('/vendors', (req, res) => {
         LEFT JOIN VendorPerformance p ON v.VendorID = p.VendorID
         GROUP BY v.VendorID
     `;
-////
+//////    const query = `
     connection.query(query, (err, results) => {
         if (err) {
             console.error("Error fetching vendors:", err.stack);
