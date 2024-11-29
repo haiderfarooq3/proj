@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Management</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="headerabout">
+        <nav>
+            <ul>
+                <li><a href="/">HOME</a></li>
+                <li><a href="/login.html">LOG IN</a></li>
+                <li><a href="/audit-log.html">AUDIT LOG</a></li>
+                <li><a href="/register-vendor.html">REGISTER VENDOR</a></li>
+                <li><a href="/add-contract.html">ADD CONTRACT</a></li>
+                <li><a href="/vendor-directory.html">VENDOR DIRECTORY</a></li>
+                <li><a href="/evaluate-performance.html">EVALUATE PERFORMANCE</a></li>
+                <li><a href="/permissions.html">VIEWS</a></li>
+                <li><a href="/budget.html">BUDGET</a></li>
+            </ul>
+        </nav>
+        <h1>Budget Management</h1>
+    </header>
+
+    <section class="table-section">
+        <h2>Budget Details</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Budget ID</th>
+                    <th>Department ID</th>
+                    <th>Allocated Amount</th>
+                    <th>Spent Amount</th>
+                    <th>Remaining Amount</th>
+                </tr>
+            </thead>
+            <tbody id="budgetTable">
+                <!-- Data will be populated by script -->
+            </tbody>
+        </table>
+
+        <h2>Adjust Budget</h2>
+        <form id="adjustBudgetForm">
+            <label for="BudgetID">Budget ID:</label>
+            <input type="number" id="BudgetID" name="BudgetID" required>
+            
+            <label for="AdjustmentAmount">Adjustment Amount:</label>
+            <input type="number" id="AdjustmentAmount" name="AdjustmentAmount" required>
+            
+            <button type="submit">Adjust Budget</button>
+        </form>
+        <div id="budgetErrors" class="error-message"></div>
+    </section>
+
+    <footer>
+        <p>Vendor Management System</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

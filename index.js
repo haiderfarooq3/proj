@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const path = require('path');
+const bcrypt = require('bcrypt'); // For password hashing
 
 const app = express();
 const port = 8080;
@@ -26,6 +27,61 @@ connection.connect(err => {
     console.log("Connected to the database");
 });
 
+// Login Route
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).send('Email and password are required.');
+    }
+
+    const query = `SELECT * FROM User WHERE Email = ?`;
+    connection.query(query, [email], async (err, results) => {
+        if (err) {
+            console.error("Error fetching user:", err.stack);
+            return res.status(500).send('Database error: ' + err.message);
+        }
+
+        if (results.length === 0) {
+            return res.status(400).send('Invalid email.');
+        }
+
+        const user = results[0];
+        const isMatch = await bcrypt.compare(password, user.Password); // Compare hashed passwords
+
+        if (!isMatch) {
+            return res.status(400).send('Invalid password.');
+        }
+
+        // Login successful
+        res.send(`Welcome, ${user.UserName}!`);
+    });
+});
+
+// Signup Route
+app.post('/signup', async (req, res) => {
+    const { username, email, password, role } = req.body;
+
+    if (!username || !email || !password || !role) {
+        return res.status(400).send('All fields are required.');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+
+    const query = `
+        INSERT INTO User (UserName, Email, Password, RoleID)
+        VALUES (?, ?, ?, ?)
+    `;
+    connection.query(query, [username, email, hashedPassword, role], (err) => {
+        if (err) {
+            console.error("Error inserting user:", err.stack);
+            return res.status(500).send('Database error: ' + err.message);
+        }
+
+        res.send('Signup successful! You can now <a href="/login.html">log in</a>.');
+    });
+});
+
 // Route: Register a new vendor
 app.post('/register-vendor', (req, res) => {
     const { Name, ServiceCategory, ContactInfo, ComplianceCertifications } = req.body;
@@ -45,24 +101,6 @@ app.post('/register-vendor', (req, res) => {
     });
 });
 
-// Route: Add or update vendor performance
-app.post('/evaluate-performance', (req, res) => {
-    const { VendorID, ServiceQuality, Timeliness, Pricing, Feedback } = req.body;
-    const vendorCheckQuery = `SELECT COUNT(*) AS count FROM Vendor WHERE VendorID = ?`;
-    connection.query(vendorCheckQuery, [VendorID], (err, results) => {
-        if (err) return res.status(500).send('Database error: ' + err.message);
-        if (results[0].count === 0) return res.status(400).send('Vendor ID does not exist.');
-        const query = `
-            INSERT INTO VendorPerformance (VendorID, EvaluationDate, ServiceQuality, Timeliness, Pricing, Feedback)
-            VALUES (?, CURDATE(), ?, ?, ?, ?)
-        `;
-        connection.query(query, [VendorID, ServiceQuality, Timeliness, Pricing, Feedback], (err) => {
-            if (err) return res.status(500).send('Database error: ' + err.message);
-            res.redirect('/success.html');
-        });
-    });
-});
-
 // Route: Fetch vendor directory
 app.get('/vendors', (req, res) => {
     const query = `
@@ -76,29 +114,71 @@ app.get('/vendors', (req, res) => {
         GROUP BY v.VendorID
     `;
     connection.query(query, (err, results) => {
-        if (err) return res.status(500).send('Database error: ' + err.message);
-        res.json(results);
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(results); // Return the Vendor data as JSON
     });
 });
 
-// Other routes
-app.post('/add-contract', (req, res) => {
-    const { VendorID, DepartmentID, StartDate, EndDate, Status } = req.body;
+// Route: Evaluate Vendor Performance
+app.post('/evaluate-performance', (req, res) => {
+    const { VendorID, ServiceQuality, Timeliness, Pricing, Feedback } = req.body;
+
+    // Validate input values
+    if (!VendorID || !ServiceQuality || !Timeliness || !Pricing) {
+        return res.status(400).send('All fields are required.');
+    }
+
+    // Check if VendorID exists
     const vendorCheckQuery = `SELECT COUNT(*) AS count FROM Vendor WHERE VendorID = ?`;
     connection.query(vendorCheckQuery, [VendorID], (err, results) => {
-        if (err) return res.status(500).send('Database error: ' + err.message);
-        if (results[0].count === 0) return res.status(400).send('Vendor ID does not exist.');
+        if (err) {
+            console.error("Error checking vendor ID:", err.stack);
+            return res.status(500).send('Database error: ' + err.message);
+        }
+
+        if (results[0].count === 0) {
+            return res.status(400).send('Vendor ID does not exist.');
+        }
+
+        // Insert the performance evaluation data
         const query = `
-            INSERT INTO Contract (VendorID, DepartmentID, StartDate, EndDate, Status)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO VendorPerformance (VendorID, EvaluationDate, ServiceQuality, Timeliness, Pricing, Feedback)
+            VALUES (?, CURDATE(), ?, ?, ?, ?)
         `;
-        connection.query(query, [VendorID, DepartmentID, StartDate, EndDate, Status], (err) => {
-            if (err) return res.status(500).send('Database error: ' + err.message);
-            res.redirect('/success.html');
+        connection.query(query, [VendorID, ServiceQuality, Timeliness, Pricing, Feedback], (err) => {
+            if (err) {
+                console.error("Error inserting performance evaluation:", err.stack);
+                return res.status(500).send('Database error: ' + err.message);
+            }
+            res.json({ message: 'Vendor performance evaluated successfully!' });
         });
     });
 });
 
+
+// Route: Adjust budget
+app.post('/adjust-budget', (req, res) => {
+    const { BudgetID, AdjustmentAmount } = req.body;
+
+    if (!BudgetID || !AdjustmentAmount) {
+        return res.status(400).send('BudgetID and AdjustmentAmount are required.');
+    }
+
+    const query = `
+        UPDATE Budget
+        SET AllocatedAmount = AllocatedAmount + ?
+        WHERE BudgetID = ?
+    `;
+    connection.query(query, [AdjustmentAmount, BudgetID], (err) => {
+        if (err) return res.status(500).send('Database error: ' + err.message);
+        res.json({ message: 'Budget adjusted successfully' });
+    });
+});
+
+// Route: Fetch audit logs
 app.get('/audit-logs', (req, res) => {
     connection.query(`SELECT * FROM AuditLog ORDER BY ActionDate DESC`, (err, results) => {
         if (err) return res.status(500).send('Database error: ' + err.message);
@@ -106,70 +186,30 @@ app.get('/audit-logs', (req, res) => {
     });
 });
 
-
-
-
-app.get('/vendors', (req, res) => {
-    const query = `SELECT * FROM Vendor`;
-    connection.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
-});
-
-app.post('/manage-vendors', (req, res) => {
-    const query = `UPDATE Vendor SET ComplianceCertifications = "Updated" WHERE VendorID = 1`;
-    connection.query(query, (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Vendor updated successfully' });
-    });
-});
-
-app.get('/contracts', (req, res) => {
-    const query = `SELECT * FROM Contract`;
-    connection.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
-});
-
-app.post('/manage-contracts', (req, res) => {
-    const query = `UPDATE Contract SET Status = "Renewed" WHERE ContractID = 1`;
-    connection.query(query, (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Contract renewed successfully' });
-    });
-});
-
+// Route: Fetch budget data
 app.get('/budgets', (req, res) => {
     const query = `SELECT * FROM Budget`;
     connection.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) return res.status(500).send('Database error: ' + err.message);
         res.json(results);
     });
 });
 
-app.post('/adjust-budgets', (req, res) => {
-    const query = `UPDATE Budget SET SpentAmount = SpentAmount + 500 WHERE BudgetID = 1`;
-    connection.query(query, (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Budget adjusted successfully' });
-    });
-});
-
+// Route: Fetch notifications
 app.get('/notifications', (req, res) => {
     const query = `SELECT * FROM Notification`;
     connection.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) return res.status(500).send('Database error: ' + err.message);
         res.json(results);
     });
 });
 
+// Route: Fetch reports
 app.get('/reports', (req, res) => {
     res.json({ message: "Reports endpoint is functional", data: [1, 2, 3, 4, 5] });
 });
 
-
+// Serve the main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

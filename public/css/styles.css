@@ -344,3 +344,78 @@ footer {
     background-color: #f4f4f4;
     font-weight: bold;
 }
+.form-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.form-container h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-container input, .form-container select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.form-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.form-container button:hover {
+    background-color: #0056b3;
+}
+
+.form-container p {
+    text-align: center;
+}
+
+.form-container a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+body {
+    color: white; /* Sets font color to white */
+    background-color: #333; /* Optional: set a dark background for contrast */
+}
+h1, h2, h3, p, label, table, th, td {
+    color: white;
+}
+
+table {
+    border: 1px solid white; /* Optional: make table borders visible on a dark background */
+}
+
+th, td {
+    border: 1px solid white;
+}
+
+a {
+    color: white; /* Make links white */
+    text-decoration: none; /* Optional: remove underline from links */
+}
+
+a:hover {
+    color: lightgray; /* Optional: change color on hover */
+}

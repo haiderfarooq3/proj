@@ -60,7 +60,56 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Fetch vendor directory and populate the table
+    // Budget Management Logic
+    const budgetTable = document.getElementById('budgetTable');
+    const adjustBudgetForm = document.getElementById('adjustBudgetForm');
+    const budgetErrors = document.getElementById('budgetErrors');
+
+    if (budgetTable) {
+        fetch('/budgets')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(budget => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${budget.BudgetID}</td>
+                        <td>${budget.DepartmentID}</td>
+                        <td>${budget.AllocatedAmount}</td>
+                        <td>${budget.SpentAmount}</td>
+                        <td>${(budget.AllocatedAmount - budget.SpentAmount).toFixed(2)}</td>
+                    `;
+                    budgetTable.appendChild(row);
+                });
+            })
+            .catch(err => console.error('Error fetching budgets:', err));
+    }
+
+    if (adjustBudgetForm) {
+        adjustBudgetForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            budgetErrors.innerHTML = ''; // Clear previous errors
+
+            const BudgetID = document.getElementById('BudgetID').value;
+            const AdjustmentAmount = document.getElementById('AdjustmentAmount').value;
+
+            fetch('/adjust-budget', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ BudgetID, AdjustmentAmount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload(); // Refresh to reflect changes
+            })
+            .catch(err => {
+                console.error('Error adjusting budget:', err);
+                budgetErrors.innerHTML = `<p>Error: ${err.message}</p>`;
+            });
+        });
+    }
+
+    // Vendor Directory Logic
     const vendorTable = document.getElementById('vendorTable');
 
     if (vendorTable) {
@@ -86,10 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error('Error fetching vendors:', err));
     }
 
-    // Fetch existing Vendor IDs for validation
+    // Fetch existing Vendor IDs for Validation
     let vendorsData = [];
 
-    fetch('/vendors-list')
+    fetch('/vendors')
         .then(response => response.json())
         .then(data => {
             vendorsData = data.map(vendor => vendor.VendorID.toString());
@@ -117,26 +166,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Performance Form Validation
+    // Performance Form Validation and Logic
     const performanceForm = document.getElementById('performanceForm');
     if (performanceForm) {
-        const vendorIDInput = document.getElementById('VendorID');
-        const vendorIDError = document.createElement('div');
-        vendorIDError.className = 'error-message';
-        vendorIDInput.insertAdjacentElement('afterend', vendorIDError);
-
+        const performanceErrors = document.getElementById('performanceErrors');
         performanceForm.addEventListener('submit', (e) => {
-            const vendorID = vendorIDInput.value.trim();
-            if (!vendorsData.includes(vendorID)) {
-                e.preventDefault();
-                vendorIDError.textContent = 'Vendor ID does not exist. Please enter a valid Vendor ID.';
-                vendorIDInput.style.borderColor = 'red';
-            } else {
-                vendorIDError.textContent = '';
-                vendorIDInput.style.borderColor = '';
+            e.preventDefault();
+            performanceErrors.innerHTML = ''; // Clear previous errors
+
+            const VendorID = document.getElementById('VendorID').value;
+            const ServiceQuality = document.getElementById('ServiceQuality').value;
+            const Timeliness = document.getElementById('Timeliness').value;
+            const Pricing = document.getElementById('Pricing').value;
+            const Feedback = document.getElementById('Feedback').value;
+
+            // Validate if VendorID exists
+            if (!vendorsData.includes(VendorID)) {
+                performanceErrors.innerHTML += '<p>Invalid Vendor ID. Please enter a valid Vendor ID.</p>';
+                return;
             }
+
+            // Send the performance evaluation data to the backend
+            fetch('/evaluate-performance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ VendorID, ServiceQuality, Timeliness, Pricing, Feedback })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                location.reload(); // Refresh to reflect changes
+            })
+            .catch(err => {
+                console.error('Error evaluating performance:', err);
+                performanceErrors.innerHTML = `<p>Error: ${err.message}</p>`;
+            });
         });
     }
 });
-
-
