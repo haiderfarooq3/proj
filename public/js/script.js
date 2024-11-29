@@ -158,9 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!vendorsData.includes(vendorID)) {
                 e.preventDefault();
                 vendorIDError.textContent = 'Vendor ID does not exist. Please enter a valid Vendor ID.';
+                vendorIDError.classList.add('error-message'); // Add the error-message class
                 vendorIDInput.style.borderColor = 'red';
             } else {
                 vendorIDError.textContent = '';
+                vendorIDError.classList.remove('error-message'); // Remove the error-message class
                 vendorIDInput.style.borderColor = '';
             }
         });
@@ -201,6 +203,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error evaluating performance:', err);
                 performanceErrors.innerHTML = `<p>Error: ${err.message}</p>`;
             });
+        });
+    }
+
+    // Vendor ID input event to show suggestions
+    const vendorIDInput = document.getElementById('VendorID');
+    const vendorSuggestions = document.getElementById('vendorSuggestions');
+
+    vendorIDInput.addEventListener('input', () => {
+        const query = vendorIDInput.value.trim();
+        if (query.length > 0) {
+            const suggestions = vendorsData.filter(vendorID => vendorID.includes(query));
+            displaySuggestions(suggestions);
+        } else {
+            vendorSuggestions.innerHTML = ''; // Clear suggestions when input is empty
+        }
+    });
+
+    // Display the filtered suggestions
+    function displaySuggestions(suggestions) {
+        vendorSuggestions.innerHTML = ''; // Clear previous suggestions
+        suggestions.forEach(vendorID => {
+            const suggestionDiv = document.createElement('div');
+            suggestionDiv.textContent = vendorID;
+            suggestionDiv.onclick = () => {
+                vendorIDInput.value = vendorID; // Auto-complete Vendor ID when clicked
+                vendorSuggestions.innerHTML = ''; // Clear suggestions
+            };
+            vendorSuggestions.appendChild(suggestionDiv);
         });
     }
 });

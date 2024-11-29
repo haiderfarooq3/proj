@@ -88,6 +88,7 @@ app.post('/register-vendor', (req, res) => {
     if (!Name || !ServiceCategory || !ContactInfo || !ComplianceCertifications) {
         return res.status(400).send('All fields are required.');
     }
+
     const query = `
         INSERT INTO Vendor (Name, ServiceCategory, ContactInfo, ComplianceCertifications)
         VALUES (?, ?, ?, ?)
@@ -157,7 +158,6 @@ app.post('/evaluate-performance', (req, res) => {
         });
     });
 });
-
 
 // Route: Adjust budget
 app.post('/adjust-budget', (req, res) => {
