@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audit Logs</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="headerabout">
+        <nav>
+            <ul>
+                <li><a href="/">HOME</a></li>
+                <li><a href="/audit-log.html">AUDIT LOG</a></li>
+                <li><a href="/register-vendor.html">REGISTER VENDOR</a></li>
+                <li><a href="/add-contract.html">ADD CONTRACT</a></li>
+                <li><a href="/vendor-directory.html">VENDOR DIRECTORY</a></li>
+                <li><a href="/evaluate-performance.html">EVALUATE PERFORMANCE</a></li>
+            </ul>
+        </nav>
+        <h1>Audit Logs</h1>
+    </header>
+    <section class="table-section">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Audit ID</th>
+                        <th>User ID</th>
+                        <th>Action Date</th>
+                        <th>Action Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="auditLogTable"></tbody>
+            </table>
+        </div>
+    </section>
+    <script>
+        fetch('/audit-logs')
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('auditLogTable');
+                data.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${log.AuditID}</td>
+                        <td>${log.UserID}</td>
+                        <td>${log.ActionDate}</td>
+                        <td>${log.ActionType}</td>
+                        <td>${log.Description}</td>
+                    `;
+                    table.appendChild(row);
+                });
+            })
+            .catch(err => console.error('Error loading audit logs:', err));
+    </script>
+</body>
+</html>

@@ -240,3 +240,107 @@ footer {
         width: 100%;
     }
 }
+/* Audit Log Table */
+.table-section table th {
+    background-color: #343a40;
+    color: #fff;
+}
+.table-section table td {
+    color: #495057;
+}
+/* Permissions Section Styling */
+.permission-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.permission-section h3 {
+    margin: 0;
+    color: #333;
+}
+
+.permission-section button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.permission-section button:hover {
+    background-color: #0056b3;
+}
+/* Permissions Section Styling */
+.permission-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.permission-section h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.permission-section button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.permission-section button:hover {
+    background-color: #0056b3;
+}
+
+/* Output Section Styling */
+.output-container {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f1f1f1;
+}
+
+.output-container h2 {
+    margin-top: 0;
+    color: #444;
+}
+
+.output-container p {
+    color: #333;
+}
+
+.output-container pre {
+    background-color: #f8f8f8;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.output-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.output-container table th,
+.output-container table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.output-container table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}

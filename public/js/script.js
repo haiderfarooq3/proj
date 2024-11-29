@@ -1,5 +1,3 @@
-// public/js/script.js
-
 document.addEventListener('DOMContentLoaded', () => {
     // Vendor Registration Form Validation
     const vendorForm = document.getElementById('vendorForm');
@@ -88,94 +86,57 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error('Error fetching vendors:', err));
     }
 
-    // Evaluate Performance Form Validation and Autocomplete
-    const performanceForm = document.getElementById('performanceForm');
-    const performanceErrors = document.getElementById('performanceErrors');
+    // Fetch existing Vendor IDs for validation
+    let vendorsData = [];
 
-    if (performanceForm) {
-        let vendorsData = [];
+    fetch('/vendors-list')
+        .then(response => response.json())
+        .then(data => {
+            vendorsData = data.map(vendor => vendor.VendorID.toString());
+        })
+        .catch(err => console.error('Error fetching vendor IDs:', err));
 
-        // Fetch vendors for autocomplete
-        fetch('/vendors-list')
-            .then(response => response.json())
-            .then(data => {
-                vendorsData = data;
-            })
-            .catch(err => console.error('Error fetching vendors for autocomplete:', err));
-
+    // Contract Form Validation
+    const contractForm = document.getElementById('contractForm');
+    if (contractForm) {
         const vendorIDInput = document.getElementById('VendorID');
-        const vendorSuggestions = document.getElementById('vendorSuggestions');
+        const vendorIDError = document.createElement('div');
+        vendorIDError.className = 'error-message';
+        vendorIDInput.insertAdjacentElement('afterend', vendorIDError);
 
-        vendorIDInput.addEventListener('input', () => {
-            const inputValue = vendorIDInput.value.toLowerCase();
-            vendorSuggestions.innerHTML = '';
-
-            if (inputValue.length > 0) {
-                const filteredVendors = vendorsData.filter(vendor =>
-                    vendor.VendorID.toString().startsWith(inputValue) ||
-                    vendor.Name.toLowerCase().includes(inputValue)
-                );
-
-                if (filteredVendors.length > 0) {
-                    const suggestionsList = document.createElement('div');
-                    suggestionsList.classList.add('suggestions-list');
-
-                    filteredVendors.forEach(vendor => {
-                        const suggestionItem = document.createElement('div');
-                        suggestionItem.textContent = `${vendor.VendorID} - ${vendor.Name}`;
-                        suggestionItem.addEventListener('click', () => {
-                            vendorIDInput.value = vendor.VendorID;
-                            vendorSuggestions.innerHTML = '';
-                        });
-                        suggestionsList.appendChild(suggestionItem);
-                    });
-
-                    vendorSuggestions.appendChild(suggestionsList);
-                }
-            }
-        });
-
-        // Close suggestions when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!vendorSuggestions.contains(e.target) && e.target !== vendorIDInput) {
-                vendorSuggestions.innerHTML = '';
-            }
-        });
-
-        performanceForm.addEventListener('submit', (e) => {
-            performanceErrors.innerHTML = ''; // Clear previous errors
-            let valid = true;
-
-            // Validate Vendor ID
-            const vendorIDValue = vendorIDInput.value.trim();
-
-            if (!vendorIDValue || isNaN(vendorIDValue)) {
-                valid = false;
+        contractForm.addEventListener('submit', (e) => {
+            const vendorID = vendorIDInput.value.trim();
+            if (!vendorsData.includes(vendorID)) {
+                e.preventDefault();
+                vendorIDError.textContent = 'Vendor ID does not exist. Please enter a valid Vendor ID.';
                 vendorIDInput.style.borderColor = 'red';
-                performanceErrors.innerHTML += `<p>Valid Vendor ID is required.</p>`;
             } else {
+                vendorIDError.textContent = '';
                 vendorIDInput.style.borderColor = '';
             }
+        });
+    }
 
-            // Validate Ratings (Service Quality, Timeliness, Pricing)
-            const ratingFields = ['ServiceQuality', 'Timeliness', 'Pricing'];
-            ratingFields.forEach((field) => {
-                const input = document.getElementById(field);
-                const value = parseFloat(input.value);
-                if (isNaN(value) || value < 0 || value > 5) {
-                    valid = false;
-                    input.style.borderColor = 'red';
-                    performanceErrors.innerHTML += `<p>${field.replace(/([A-Z])/g, ' $1')} must be between 0 and 5.</p>`;
-                } else {
-                    input.style.borderColor = '';
-                }
-            });
+    // Performance Form Validation
+    const performanceForm = document.getElementById('performanceForm');
+    if (performanceForm) {
+        const vendorIDInput = document.getElementById('VendorID');
+        const vendorIDError = document.createElement('div');
+        vendorIDError.className = 'error-message';
+        vendorIDInput.insertAdjacentElement('afterend', vendorIDError);
 
-            // Prevent form submission if invalid
-            if (!valid) {
+        performanceForm.addEventListener('submit', (e) => {
+            const vendorID = vendorIDInput.value.trim();
+            if (!vendorsData.includes(vendorID)) {
                 e.preventDefault();
-                alert('Please fix the highlighted errors and try again.');
+                vendorIDError.textContent = 'Vendor ID does not exist. Please enter a valid Vendor ID.';
+                vendorIDInput.style.borderColor = 'red';
+            } else {
+                vendorIDError.textContent = '';
+                vendorIDInput.style.borderColor = '';
             }
         });
     }
 });
+
+

@@ -1,5 +1,3 @@
-// index.js
-
 const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
@@ -9,9 +7,10 @@ const app = express();
 const port = 8080;
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Database connection (Keeping your original connection logic)
+// Database connection
 const connection = mysql.createConnection({
     host: "localhost",
     user: "root",
@@ -30,22 +29,17 @@ connection.connect(err => {
 // Route: Register a new vendor
 app.post('/register-vendor', (req, res) => {
     const { Name, ServiceCategory, ContactInfo, ComplianceCertifications } = req.body;
-
-    // Validate inputs
     if (!Name || !ServiceCategory || !ContactInfo || !ComplianceCertifications) {
         return res.status(400).send('All fields are required.');
     }
-
     const query = `
         INSERT INTO Vendor (Name, ServiceCategory, ContactInfo, ComplianceCertifications)
         VALUES (?, ?, ?, ?)
     `;
-
     connection.query(query, [Name, ServiceCategory, ContactInfo, ComplianceCertifications], (err) => {
         if (err) {
             console.error("Error inserting vendor:", err.stack);
-            res.status(500).send('Database error: ' + err.message);
-            return;
+            return res.status(500).send('Database error: ' + err.message);
         }
         res.redirect('/success.html');
     });
@@ -54,32 +48,22 @@ app.post('/register-vendor', (req, res) => {
 // Route: Add or update vendor performance
 app.post('/evaluate-performance', (req, res) => {
     const { VendorID, ServiceQuality, Timeliness, Pricing, Feedback } = req.body;
-
-    // Validate Ratings
-    if (
-        isNaN(ServiceQuality) || ServiceQuality < 0 || ServiceQuality > 5 ||
-        isNaN(Timeliness) || Timeliness < 0 || Timeliness > 5 ||
-        isNaN(Pricing) || Pricing < 0 || Pricing > 5
-    ) {
-        return res.status(400).send('Invalid ratings. Ratings must be between 0 and 5.');
-    }
-
-    const query = `
-        INSERT INTO VendorPerformance (VendorID, EvaluationDate, ServiceQuality, Timeliness, Pricing, Feedback)
-        VALUES (?, CURDATE(), ?, ?, ?, ?)
-    `;
-
-    connection.query(query, [VendorID, ServiceQuality, Timeliness, Pricing, Feedback], (err) => {
-        if (err) {
-            console.error("Error inserting evaluation:", err.stack);
-            res.status(500).send('Database error: ' + err.message);
-            return;
-        }
-        res.redirect('/success.html');
+    const vendorCheckQuery = `SELECT COUNT(*) AS count FROM Vendor WHERE VendorID = ?`;
+    connection.query(vendorCheckQuery, [VendorID], (err, results) => {
+        if (err) return res.status(500).send('Database error: ' + err.message);
+        if (results[0].count === 0) return res.status(400).send('Vendor ID does not exist.');
+        const query = `
+            INSERT INTO VendorPerformance (VendorID, EvaluationDate, ServiceQuality, Timeliness, Pricing, Feedback)
+            VALUES (?, CURDATE(), ?, ?, ?, ?)
+        `;
+        connection.query(query, [VendorID, ServiceQuality, Timeliness, Pricing, Feedback], (err) => {
+            if (err) return res.status(500).send('Database error: ' + err.message);
+            res.redirect('/success.html');
+        });
     });
 });
 
-// Route: Fetch vendor directory and performance metrics
+// Route: Fetch vendor directory
 app.get('/vendors', (req, res) => {
     const query = `
         SELECT v.VendorID, v.Name, v.ServiceCategory, v.ContactInfo, v.ComplianceCertifications,
@@ -91,78 +75,101 @@ app.get('/vendors', (req, res) => {
         LEFT JOIN VendorPerformance p ON v.VendorID = p.VendorID
         GROUP BY v.VendorID
     `;
-//////    const query = `
     connection.query(query, (err, results) => {
-        if (err) {
-            console.error("Error fetching vendors:", err.stack);
-            res.status(500).send('Database error: ' + err.message);
-            return;
-        }
+        if (err) return res.status(500).send('Database error: ' + err.message);
         res.json(results);
     });
 });
 
-// Route: Provide simplified vendor list for autocomplete
-app.get('/vendors-list', (req, res) => {
-    const query = `
-        SELECT VendorID, Name
-        FROM Vendor
-    `;
-
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error("Error fetching vendor list:", err.stack);
-            res.status(500).send('Database error: ' + err.message);
-            return;
-        }
-        res.json(results);
-    });
-});
-
-// Route: View contracts
-app.get('/contracts', (req, res) => {
-    const query = `
-        SELECT c.ContractID, v.Name AS VendorName, d.DepartmentName, c.StartDate, c.EndDate, c.Status
-        FROM Contract c
-        JOIN Vendor v ON c.VendorID = v.VendorID
-        JOIN Department d ON c.DepartmentID = d.DepartmentID
-    `;
-
-    connection.query(query, (err, results) => {
-        if (err) {
-            console.error("Error fetching contracts:", err.stack);
-            res.status(500).send('Database error: ' + err.message);
-            return;
-        }
-        res.json(results);
-    });
-});
-
-// Route: Add a new contract
+// Other routes
 app.post('/add-contract', (req, res) => {
     const { VendorID, DepartmentID, StartDate, EndDate, Status } = req.body;
-
-    // Basic validation
-    if (!VendorID || !DepartmentID || !StartDate || !EndDate || !Status) {
-        return res.status(400).send('All fields are required.');
-    }
-
-    const query = `
-        INSERT INTO Contract (VendorID, DepartmentID, StartDate, EndDate, Status)
-        VALUES (?, ?, ?, ?, ?)
-    `;
-
-    connection.query(query, [VendorID, DepartmentID, StartDate, EndDate, Status], (err) => {
-        if (err) {
-            console.error("Error adding contract:", err.stack);
-            res.status(500).send('Database error: ' + err.message);
-            return;
-        }
-        res.redirect('/success.html');
+    const vendorCheckQuery = `SELECT COUNT(*) AS count FROM Vendor WHERE VendorID = ?`;
+    connection.query(vendorCheckQuery, [VendorID], (err, results) => {
+        if (err) return res.status(500).send('Database error: ' + err.message);
+        if (results[0].count === 0) return res.status(400).send('Vendor ID does not exist.');
+        const query = `
+            INSERT INTO Contract (VendorID, DepartmentID, StartDate, EndDate, Status)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        connection.query(query, [VendorID, DepartmentID, StartDate, EndDate, Status], (err) => {
+            if (err) return res.status(500).send('Database error: ' + err.message);
+            res.redirect('/success.html');
+        });
     });
 });
 
-// Static files
+app.get('/audit-logs', (req, res) => {
+    connection.query(`SELECT * FROM AuditLog ORDER BY ActionDate DESC`, (err, results) => {
+        if (err) return res.status(500).send('Database error: ' + err.message);
+        res.json(results);
+    });
+});
+
+
+
+
+app.get('/vendors', (req, res) => {
+    const query = `SELECT * FROM Vendor`;
+    connection.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.post('/manage-vendors', (req, res) => {
+    const query = `UPDATE Vendor SET ComplianceCertifications = "Updated" WHERE VendorID = 1`;
+    connection.query(query, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Vendor updated successfully' });
+    });
+});
+
+app.get('/contracts', (req, res) => {
+    const query = `SELECT * FROM Contract`;
+    connection.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.post('/manage-contracts', (req, res) => {
+    const query = `UPDATE Contract SET Status = "Renewed" WHERE ContractID = 1`;
+    connection.query(query, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Contract renewed successfully' });
+    });
+});
+
+app.get('/budgets', (req, res) => {
+    const query = `SELECT * FROM Budget`;
+    connection.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.post('/adjust-budgets', (req, res) => {
+    const query = `UPDATE Budget SET SpentAmount = SpentAmount + 500 WHERE BudgetID = 1`;
+    connection.query(query, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Budget adjusted successfully' });
+    });
+});
+
+app.get('/notifications', (req, res) => {
+    const query = `SELECT * FROM Notification`;
+    connection.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.get('/reports', (req, res) => {
+    res.json({ message: "Reports endpoint is functional", data: [1, 2, 3, 4, 5] });
+});
+
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
