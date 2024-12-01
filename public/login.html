@@ -14,7 +14,7 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <div class="form-container">
         <h2>Login</h2>
-        <form id="loginForm" action="/login" method="POST">
+        <form id="loginForm">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
             
@@ -23,7 +23,65 @@
             
             <button type="submit">Login</button>
         </form>
+        <div id="errorMessage" style="color: red;"></div>
         <p>Don't have an account? <a href="/signup.html">Sign up</a></p>
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = '';
+
+            const formData = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store minimal user context in localStorage
+                    localStorage.setItem('userRole', data.role);
+                    window.location.href = data.redirectUrl;
+                } else {
+                    errorMessage.textContent = data.message || 'Login failed';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'An error occurred during login';
+                console.error('Login error:', error);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userRole = parseInt(localStorage.getItem('userRole'));
+            const navLinks = document.querySelectorAll('nav ul li');
+
+            if (!userRole) {
+                navLinks.forEach(link => {
+                    if (!link.querySelector('a').getAttribute('href').includes('login.html')) {
+                        link.style.display = 'none';
+                    }
+                });
+            } else {
+                navLinks.forEach(link => {
+                    const href = link.querySelector('a').getAttribute('href');
+                    if ((userRole === 3 && !href.includes('register-vendor.html')) ||
+                        (userRole === 5 && !href.includes('budget.html'))) {
+                        link.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

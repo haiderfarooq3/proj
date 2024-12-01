@@ -21,7 +21,6 @@
                 <li><a href="/add-contract.html">ADD CONTRACT</a></li>
                 <li><a href="/vendor-directory.html">VENDOR DIRECTORY</a></li>
                 <li><a href="/evaluate-performance.html">EVALUATE PERFORMANCE</a></li>
-                <li><a href="/permissions.html">VIEWS</a></li>
                 <li><a href="/budget.html">BUDGET</a></li>
             </ul>
         </nav>
@@ -30,10 +29,10 @@
 
     <section class="table-section">
         <div class="table-container">
-            <table>
+            <table id="vendorTable">
                 <thead>
                     <tr>
-                        <th>Vendor ID</th>
+                        <th>VendorID</th>
                         <th>Name</th>
                         <th>Service Category</th>
                         <th>Contact Info</th>
@@ -42,14 +41,30 @@
                         <th>Avg Timeliness</th>
                         <th>Avg Pricing</th>
                         <th>Performance Rating</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="vendorTable">
-                    <!-- Data will be populated by script.js -->
+                <tbody>
+                    <!-- Vendor data will be populated here -->
                 </tbody>
             </table>
         </div>
     </section>
+
+    <!-- Re-authentication Modal -->
+    <div id="authModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span id="closeModal">&times;</span>
+            <h2>Re-Authentication Required</h2>
+            <form id="authForm">
+                <label for="authEmail">Email:</label>
+                <input type="email" id="authEmail" name="authEmail" required>
+                <label for="authPassword">Password:</label>
+                <input type="password" id="authPassword" name="authPassword" required>
+                <button type="submit">Authenticate</button>
+            </form>
+        </div>
+    </div>
 
     <footer>
         <p>Vendor Management System</p>

@@ -37,5 +37,27 @@
         </form>
         <p>Already have an account? <a href="/login.html">Log in</a></p>
     </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userRole = parseInt(localStorage.getItem('userRole'));
+        const navLinks = document.querySelectorAll('nav ul li');
+
+        if (!userRole) {
+            navLinks.forEach(link => {
+                if (!link.querySelector('a').getAttribute('href').includes('login.html')) {
+                    link.style.display = 'none';
+                }
+            });
+        } else {
+            navLinks.forEach(link => {
+                const href = link.querySelector('a').getAttribute('href');
+                if ((userRole === 3 && !href.includes('register-vendor.html')) ||
+                    (userRole === 5 && !href.includes('budget.html'))) {
+                    link.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

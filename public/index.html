@@ -23,8 +23,8 @@
                 <li><a href="/add-contract.html">ADD CONTRACT</a></li>
                 <li><a href="/vendor-directory.html">VENDOR DIRECTORY</a></li>
                 <li><a href="/evaluate-performance.html">EVALUATE PERFORMANCE</a></li>
-                <li><a href="/permissions.html">VIEWS</a></li>
                 <li><a href="/budget.html">BUDGET</a></li>
+                <li><a href="/logout">LOG OUT</a></li>
             </ul>
         </nav>
         <h1>Welcome to Vendor Management System</h1>
@@ -56,5 +56,27 @@
     <footer>
         <p>Haider Farooq 22i-1943 | Database Management Project</p>
     </footer>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userRole = parseInt(localStorage.getItem('userRole'));
+        const navLinks = document.querySelectorAll('nav ul li');
+
+        if (!userRole) {
+            navLinks.forEach(link => {
+                if (!link.querySelector('a').getAttribute('href').includes('login.html')) {
+                    link.style.display = 'none';
+                }
+            });
+        } else {
+            navLinks.forEach(link => {
+                const href = link.querySelector('a').getAttribute('href');
+                if ((userRole === 3 && !href.includes('register-vendor.html')) ||
+                    (userRole === 5 && !href.includes('budget.html'))) {
+                    link.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

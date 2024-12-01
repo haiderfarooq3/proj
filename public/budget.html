@@ -12,6 +12,28 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userRole = parseInt(localStorage.getItem('userRole'));
+        const navLinks = document.querySelectorAll('nav ul li');
+
+        if (!userRole) {
+            navLinks.forEach(link => {
+                if (!link.querySelector('a').getAttribute('href').includes('login.html')) {
+                    link.style.display = 'none';
+                }
+            });
+        } else {
+            navLinks.forEach(link => {
+                const href = link.querySelector('a').getAttribute('href');
+                if ((userRole === 3 && !href.includes('register-vendor.html')) ||
+                    (userRole === 5 && !href.includes('budget.html'))) {
+                    link.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
     <header class="headerabout">
         <nav>
             <ul>
@@ -22,7 +44,6 @@
                 <li><a href="/add-contract.html">ADD CONTRACT</a></li>
                 <li><a href="/vendor-directory.html">VENDOR DIRECTORY</a></li>
                 <li><a href="/evaluate-performance.html">EVALUATE PERFORMANCE</a></li>
-                <li><a href="/permissions.html">VIEWS</a></li>
                 <li><a href="/budget.html">BUDGET</a></li>
             </ul>
         </nav>
@@ -44,6 +65,7 @@
             <tbody id="budgetTable">
                 <!-- Data will be populated by script -->
             </tbody>
+
         </table>
 
         <h2>Adjust Budget</h2>

@@ -21,7 +21,6 @@
                 <li><a href="/add-contract.html">ADD CONTRACT</a></li>
                 <li><a href="/vendor-directory.html">VENDOR DIRECTORY</a></li>
                 <li><a href="/evaluate-performance.html">EVALUATE PERFORMANCE</a></li>
-                <li><a href="/permissions.html">VIEWS</a></li>
                 <li><a href="/budget.html">BUDGET</a></li>
             </ul>
         </nav>
@@ -50,17 +49,32 @@
                 const table = document.getElementById('auditLogTable');
                 data.forEach(log => {
                     const row = document.createElement('tr');
+                    const formattedDate = new Date(log.ActionDate).toLocaleString();
                     row.innerHTML = `
                         <td>${log.AuditID}</td>
-                        <td>${log.UserID}</td>
-                        <td>${log.ActionDate}</td>
-                        <td>${log.ActionType}</td>
+                        <td>${log.UserName || 'System'}</td>
+                        <td>${formattedDate}</td>
+                        <td><span class="badge badge-${getBadgeClass(log.ActionType)}">${log.ActionType}</span></td>
                         <td>${log.Description}</td>
                     `;
                     table.appendChild(row);
                 });
             })
-            .catch(err => console.error('Error loading audit logs:', err));
+            .catch(err => {
+                console.error('Error loading audit logs:', err);
+                document.getElementById('auditLogTable').innerHTML = '<tr><td colspan="5">Error loading audit logs</td></tr>';
+            });
+
+        function getBadgeClass(actionType) {
+            const types = {
+                'LOGIN': 'info',
+                'VENDOR_REGISTER': 'success',
+                'VENDOR_DELETE': 'danger',
+                'PERFORMANCE_EVAL': 'primary',
+                'BUDGET_ADJUST': 'warning'
+            };
+            return types[actionType] || 'secondary';
+        }
     </script>
 </body>
 </html>
