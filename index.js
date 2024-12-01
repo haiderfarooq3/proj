@@ -400,42 +400,21 @@ app.post('/api/add-vendor', (req, res) => {
 });
 
 // Delete Vendor Route
-app.post('/api/delete-vendor', (req, res) => {
-    const { email, password, vendorID } = req.body;
+app.post('/api/delete-vendor', checkRole([1]), (req, res) => {
+    const { vendorID } = req.body;
 
-    if (!email || !password || !vendorID) {
-        return res.status(400).json({ success: false, message: 'Email, password, and vendor ID are required.' });
+    if (!vendorID) {
+        return res.status(400).json({ success: false, message: 'Vendor ID is required.' });
     }
 
-    // Re-authenticate the user
-    const query = `SELECT * FROM User WHERE Email = ?`;
-    connection.query(query, [email], async (err, results) => {
+    const deleteQuery = `DELETE FROM Vendor WHERE VendorID = ?`;
+    connection.query(deleteQuery, [vendorID], (err) => {
         if (err) {
-            console.error("Error fetching user:", err.stack);
+            console.error("Error deleting vendor:", err.stack);
             return res.status(500).json({ success: false, message: 'Database error: ' + err.message });
         }
-
-        if (results.length === 0) {
-            return res.status(400).json({ success: false, message: 'Invalid email or password.' });
-        }
-
-        const user = results[0];
-        const isMatch = await bcrypt.compare(password, user.Password);
-
-        if (!isMatch) {
-            return res.status(400).json({ success: false, message: 'Invalid email or password.' });
-        }
-
-        // Delete the vendor
-        const deleteQuery = `DELETE FROM Vendor WHERE VendorID = ?`;
-        connection.query(deleteQuery, [vendorID], (err) => {
-            if (err) {
-                console.error("Error deleting vendor:", err.stack);
-                return res.status(500).json({ success: false, message: 'Database error: ' + err.message });
-            }
-            logAudit(user.UserID, 'VENDOR_DELETE', `Vendor ID ${vendorID} deleted`);
-            res.json({ success: true, message: 'Vendor deleted successfully!' });
-        });
+        logAudit(req.session.user.UserID, 'VENDOR_DELETE', `Vendor ID ${vendorID} deleted`);
+        res.json({ success: true, message: 'Vendor deleted successfully!' });
     });
 });
 
@@ -479,6 +458,28 @@ app.post('/api/tasks', (req, res) => {
 // Route: Fetch reports
 app.get('/api/reports', (req, res) => {
     res.json({ message: "Reports endpoint is functional", data: [1, 2, 3, 4, 5] });
+});
+
+// Route: Add a new contract
+app.post('/add-contract', checkRole([1, 4]), (req, res) => { // Admin and Procurement
+    const { VendorID, DepartmentID, StartDate, EndDate, Status } = req.body;
+
+    if (!VendorID || !DepartmentID || !StartDate || !EndDate || !Status) {
+        return res.status(400).send('All fields are required.');
+    }
+
+    const query = `
+        INSERT INTO Contract (VendorID, DepartmentID, StartDate, EndDate, Status)
+        VALUES (?, ?, ?, ?, ?)
+    `;
+    connection.query(query, [VendorID, DepartmentID, StartDate, EndDate, Status], (err) => {
+        if (err) {
+            console.error("Error inserting contract:", err.stack);
+            return res.status(500).send('Database error: ' + err.message);
+        }
+        logAudit(req.session.user.UserID, 'CONTRACT_ADD', `New contract added for Vendor ID: ${VendorID}`);
+        res.redirect('/success.html');
+    });
 });
 
 // Serve the main page

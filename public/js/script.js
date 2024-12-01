@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${vendor.AvgPricing || 'N/A'}</td>
                         <td>${vendor.PerformanceRating || 'N/A'}</td>
                         <td>
-                            ${userRole === 1 ? `<button class="delete-button" data-vendor-id="${vendor.VendorID}">Delete</button>` : ''}
+                         <button class="delete-button" data-vendor-id="${vendor.VendorID}">Delete</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -277,19 +277,60 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper function for delete button handlers
     function attachDeleteHandlers() {
         const deleteButtons = document.querySelectorAll('.delete-button');
-        if (!deleteButtons.length) return;
-
+        const deleteModal = document.getElementById('deleteModal');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const modalCloseButton = document.getElementById('closeDeleteModal');
+        let vendorIDToDelete = null;
+    
         deleteButtons.forEach(button => {
             button.addEventListener('click', (e) => {
-                const vendorID = e.target.dataset.vendorId;
-                const authModal = document.getElementById('authModal');
-                if (authModal) {
-                    authModal.style.display = 'block';
-                    // ...existing delete handler code...
-                }
+                vendorIDToDelete = e.target.dataset.vendorId;
+                deleteModal.style.display = 'block';
             });
         });
+    
+        confirmDelete.addEventListener('click', () => {
+            if (vendorIDToDelete) {
+                fetch('/api/delete-vendor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vendorID: vendorIDToDelete })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload(); // Reload the page to reflect changes
+                        } else {
+                            alert('Failed to delete vendor: ' + data.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error deleting vendor:', err);
+                        alert('An error occurred while deleting the vendor.');
+                    })
+                    .finally(() => {
+                        deleteModal.style.display = 'none';
+                    });
+            }
+        });
+    
+        cancelDelete.addEventListener('click', () => {
+            deleteModal.style.display = 'none';
+        });
+    
+        modalCloseButton.addEventListener('click', () => {
+            deleteModal.style.display = 'none';
+        });
+    
+        window.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                deleteModal.style.display = 'none';
+            }
+        });
     }
+    
 
     // Fetch existing Vendor IDs for Validation
     let vendorsData = [];
